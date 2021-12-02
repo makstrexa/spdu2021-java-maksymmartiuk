@@ -19,6 +19,11 @@ public class ConsoleOutputTest {
 
     private ByteArrayOutputStream output = new ByteArrayOutputStream();
 
+    @Before
+    public void setUpStreams() {
+        System.setOut(new PrintStream(output));
+    }
+
     private static final String expected = "active buyers:\r\n" +
             "JUNE\r\n" +
             "- Adam Brown (097 111 22 33): $300\r\n" +
@@ -36,14 +41,23 @@ public class ConsoleOutputTest {
             "AUGUST\r\n" +
             "- none\r\n";
 
+    static BuyerService buyerService;
+    static PurchaseService purchaseService;
+
     @Before
-    public void setUpStreams() {
-        System.setOut(new PrintStream(output));
+    public void initData() {
+        DataBase dataBase = new DataBase();
+
+        InMemoryTestData.generateTo(dataBase);
+        DaoFactory daoFactory = dataBase.getDaoFactory();
+        buyerService = new BuyerServiceImpl(daoFactory);
+        purchaseService = new PurchaseServiceImpl(daoFactory);
     }
+
 
     @Test
     public void checkOutput() {
-        Process.main(null);
+        Process.outputLogicWithAlreadyGeneratedDB(purchaseService, buyerService);
         Assert.assertEquals(expected, output.toString());
     }
 
